@@ -10,14 +10,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String
+  applications Application[] @relation("UserApplications")
+  createdAt    DateTime      @default(now())
+}
+
 model Application {
   id          Int      @id @default(autoincrement())
   company     String
   role        String
   status      String   @default("applied")
-  dateApplied DateTime @default(now()) // ✅ fixed typo & added default
+  dateApplied DateTime @default(now())
   link        String?
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // relation back to User
+  userId Int?
+  user   User? @relation("UserApplications", fields: [userId], references: [id])
 }

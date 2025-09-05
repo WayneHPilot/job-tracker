@@ -5,28 +5,16 @@ const prisma = new PrismaClient();
 async function main() {
 	console.log("🌱 Seeding database...");
 
-	await prisma.application.createMany({
-		data: [
-			{
-				company: "Google",
-				role: "Frontend Developer",
-				status: "applied",
-				dateApplied: new Date("2025-08-01"),
-			},
-			{
-				company: "Microsoft",
-				role: "Backend Developer",
-				status: "interviewing",
-				dateApplied: new Date("2025-08-05"),
-			},
-			{
-				company: "OpenAI",
-				role: "Fullstack Engineer",
-				status: "offer",
-				dateApplied: new Date("2025-08-10"),
-			},
-		],
+	// No demo applications anymore
+	// Optionally, you could seed a test user here while developing:
+	/*
+	const user = await prisma.user.create({
+		data: {
+			email: "test@example.com",
+			password: "hashedpassword", // store hashed if you seed
+		},
 	});
+	*/
 
 	console.log("✅ Seeding complete!");
 }
