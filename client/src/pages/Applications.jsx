@@ -1,50 +1,35 @@
-import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+// client/src/pages/Applications.jsx
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import AddApplicationForm from "../components/AddApplicationForm";
-
-const Badge = ({ status }) => {
-	const map = {
-		applied: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200",
-		interviewing: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200",
-		offer: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200",
-	};
-	return (
-		<span className={`px-3 py-1 rounded-full text-xs font-medium ${map[status] || ""}`}>
-		{status}
-		</span>
-	);
-};
-
-const CardSkeleton = () => (
-<li className="rounded-xl border border-gray-200 dark:border-gray-800 p-6 bg-white dark:bg-gray-900 animate-pulse">
-    <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mt-3"></div>
-    <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-4"></div>
-</li>
-);
+import EditApplicationModal from "../components/EditApplicationModal";
 
 const Applications = () => {
 	const [applications, setApplications] = useState([]);
 	const [statusFilter, setStatusFilter] = useState("");
 	const [sortOrder, setSortOrder] = useState("newest");
-	const [search, setSearch] = useState("");
-	const deferredSearch = useDeferredValue(search);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState(null);
 
-	// fetch applications from API with server-side filter/sort
+	// Modal state
+	const [editingApp, setEditingApp] = useState(null);
+
+	// Fetch applications
 	const fetchApplications = useCallback(async () => {
-		try {
 		setLoading(true);
-		const params = {};
-		if (statusFilter) params.status = statusFilter;
-		if (sortOrder) params.sort = sortOrder;
+		setError(null);
+		try {
+			const params = {};
+			if (statusFilter) params.status = statusFilter;
+			if (sortOrder) params.sort = sortOrder;
 
-		const res = await axios.get("http://localhost:3001/api/applications", { params });
-		setApplications(res.data);
-		} catch (e) {
-		console.error(e);
+			const res = await axios.get("http://localhost:3001/api/applications", { params });
+			setApplications(res.data);
+		} catch (err) {
+			console.error(err);
+			setError("Failed to load applications. Please try again.");
 		} finally {
-		setLoading(false);
+			setLoading(false);
 		}
 	}, [statusFilter, sortOrder]);
 
@@ -52,229 +37,149 @@ const Applications = () => {
 		fetchApplications();
 	}, [fetchApplications]);
 
-	// client-side search + derived stats
-	const filtered = useMemo(() => {
-		const q = deferredSearch.trim().toLowerCase();
-		let list = [...applications];
-
-		if (q) {
-		list = list.filter(
-			(a) =>
-			a.company.toLowerCase().includes(q) ||
-			a.role.toLowerCase().includes(q) ||
-			(a.notes || "").toLowerCase().includes(q)
-		);
-		}
-
-		return list;
-	}, [applications, deferredSearch]);
-
-	const stats = useMemo(() => {
-		const all = applications.length;
-		const byStatus = applications.reduce(
-		(acc, a) => ((acc[a.status] = (acc[a.status] || 0) + 1), acc),
-		{}
-		);
-		return { all, ...byStatus };
-	}, [applications]);
-
-	return (
-		<div className="space-y-6">
-		<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<h1 className="text-3xl font-bold">Applications</h1>
-			<div className="flex gap-2 text-sm">
-			<span className="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-3 py-1">
-				Total: <strong>{stats.all || 0}</strong>
-			</span>
-			<span className="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-3 py-1">
-				Applied: <strong>{stats.applied || 0}</strong>
-			</span>
-			<span className="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-3 py-1">
-				Interviewing: <strong>{stats.interviewing || 0}</strong>
-			</span>
-			<span className="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-3 py-1">
-				Offer: <strong>{stats.offer || 0}</strong>
-			</span>
-			</div>
-		</div>
-
-		{/* Add new */}
-		<AddApplicationForm onSuccess={fetchApplications} />
-
-		{/* Controls */}
-		<div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-			<input
-			type="text"
-			placeholder="Search company, role, notes…"
-			value={search}
-			onChange={(e) => setSearch(e.target.value)}
-			className="w-full sm:w-1/2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-			/>
-
-			<select
-			className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2"
-			value={statusFilter}
-			onChange={(e) => setStatusFilter(e.target.value)}
-			>
-			<option value="">All Statuses</option>
-			<option value="applied">Applied</option>
-			<option value="interviewing">Interviewing</option>
-			<option value="offer">Offer</option>
-			</select>
-
-			<select
-			className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2"
-			value={sortOrder}
-			onChange={(e) => setSortOrder(e.target.value)}
-			>
-			<option value="newest">Newest First</option>
-			<option value="oldest">Oldest First</option>
-			</select>
-		</div>
-
-		{/* List */}
-		<ul className="space-y-4">
-			{loading
-			? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
-			: filtered.map((app) => (
-				<li
-					key={app.id}
-					className="rounded-xl border border-gray-200 dark:border-gray-800 p-6 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
-				>
-					<div className="flex items-start justify-between gap-4">
-					<div>
-						<h2 className="text-xl font-semibold">{app.company}</h2>
-						<p className="text-gray-600 dark:text-gray-300">{app.role}</p>
-						{app.link && (
-						<a
-							href={app.link}
-							target="_blank"
-							rel="noreferrer"
-							className="text-indigo-600 dark:text-indigo-400 underline mt-1 inline-block"
-						>
-							Job posting
-						</a>
-						)}
-						{app.notes && (
-						<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Notes: {app.notes}</p>
-						)}
-					</div>
-					<Badge status={app.status} />
-					</div>
-
-					<div className="mt-4 flex gap-2">
-					<EditInline app={app} onSaved={fetchApplications} />
-					<button
-						onClick={async () => {
-						await axios.delete(`http://localhost:3001/api/applications/${app.id}`);
-						fetchApplications();
-						}}
-						className="rounded-lg bg-red-500 hover:bg-red-600 text-white px-4 py-2"
-					>
-						Delete
-					</button>
-					</div>
-				</li>
-				))}
-
-			{!loading && filtered.length === 0 && (
-			<li className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
-				No applications match your search.
-			</li>
-			)}
-		</ul>
-		</div>
-	);
-};
-
-// Inline editor component (keeps file self-contained)
-const EditInline = ({ app, onSaved }) => {
-	const [open, setOpen] = useState(false);
-	const [saving, setSaving] = useState(false);
-	const [form, setForm] = useState({
-		company: app.company,
-		role: app.role,
-		status: app.status,
-		link: app.link || "",
-		notes: app.notes || "",
-	});
-
-	const save = async () => {
+	// Save edited application
+	const handleSave = async (updatedApp) => {
 		try {
-		setSaving(true);
-		await axios.put(`http://localhost:3001/api/applications/${app.id}`, form);
-		setOpen(false);
-		onSaved?.();
-		} catch (e) {
-		console.error(e);
-		} finally {
-		setSaving(false);
+			await axios.put(`http://localhost:3001/api/applications/${editingApp.id}`, updatedApp);
+			setEditingApp(null);
+			fetchApplications();
+		} catch (err) {
+			console.error("Error saving changes:", err);
+			setError("Failed to save changes.");
 		}
 	};
 
-	if (!open) {
-		return (
-		<button
-			onClick={() => setOpen(true)}
-			className="rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2"
-		>
-			Edit
-		</button>
-		);
-	}
+	// Delete application
+	const deleteApplication = async (id) => {
+		if (!window.confirm("Are you sure you want to delete this application?")) return;
+		try {
+			await axios.delete(`http://localhost:3001/api/applications/${id}`);
+			fetchApplications();
+		} catch (err) {
+			setError("Failed to delete application.");
+		}
+	};
 
 	return (
-		<div className="w-full rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-gray-50 dark:bg-gray-950">
-		<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-			<input
-			className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2"
-			value={form.company}
-			onChange={(e) => setForm({ ...form, company: e.target.value })}
-			placeholder="Company"
+		<div className="max-w-4xl mx-auto p-4">
+			<h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Job Applications</h1>
+
+			{/* Filters */}
+			<div className="flex flex-wrap gap-4 mb-6">
+				<select
+					className="border rounded px-3 py-2 bg-white text-black dark:bg-gray-800 dark:text-gray-100"
+					value={statusFilter}
+					onChange={(e) => setStatusFilter(e.target.value)}
+				>
+					<option value="">All Statuses</option>
+					<option value="applied">Applied</option>
+					<option value="interviewing">Interviewing</option>
+					<option value="offer">Offer</option>
+				</select>
+
+				<select
+					className="border rounded px-3 py-2 bg-white text-black dark:bg-gray-800 dark:text-gray-100"
+					value={sortOrder}
+					onChange={(e) => setSortOrder(e.target.value)}
+				>
+					<option value="newest">Newest First</option>
+					<option value="oldest">Oldest First</option>
+				</select>
+			</div>
+
+			{/* Error message */}
+			{error && (
+				<div className="text-red-600 bg-red-100 border border-red-300 rounded p-3 mb-4">
+					{error}
+				</div>
+			)}
+
+			{/* Loading state */}
+			{loading ? (
+				<ul className="space-y-4">
+					{[1, 2, 3].map((i) => (
+						<li key={i} className="border rounded p-4 animate-pulse">
+							<div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
+							<div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
+						</li>
+					))}
+				</ul>
+			) : applications.length === 0 ? (
+				<div className="text-center text-gray-500 mt-10">
+					<p>No applications found. Try adding one below 👇</p>
+				</div>
+			) : (
+				<ul className="space-y-4">
+					{applications.map((app) => (
+						<li
+							key={app.id}
+							className="border rounded p-4 hover:shadow-md transition
+							        bg-white dark:bg-gray-900
+							        text-gray-900 dark:text-gray-100
+							        border-gray-300 dark:border-gray-700"
+						>
+							<div className="flex justify-between items-center">
+								<div>
+									<h2 className="font-semibold text-lg">{app.company}</h2>
+									<p className="text-gray-700 dark:text-gray-300">{app.role}</p>
+									<span
+										className={`inline-block mt-1 px-2 py-1 rounded text-sm ${
+											app.status === "applied"
+												? "bg-blue-100 text-blue-800"
+												: app.status === "interviewing"
+												? "bg-yellow-100 text-yellow-800"
+												: "bg-green-100 text-green-800"
+										}`}
+									>
+										{app.status}
+									</span>
+									{app.link && (
+										<a
+											href={app.link}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="text-indigo-600 dark:text-indigo-400 underline block mt-1"
+										>
+											Job Posting
+										</a>
+									)}
+									{app.notes && (
+										<p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{app.notes}</p>
+									)}
+								</div>
+
+								<div className="flex gap-2">
+									<button
+										onClick={() => setEditingApp(app)}
+										className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+									>
+										Edit
+									</button>
+									<button
+										onClick={() => deleteApplication(app.id)}
+										className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+									>
+										Delete
+									</button>
+								</div>
+							</div>
+						</li>
+					))}
+				</ul>
+			)}
+
+			{/* Add new application form */}
+			<div className="mt-8">
+				<AddApplicationForm onAdded={fetchApplications} />
+			</div>
+
+			{/* Edit Modal */}
+			<EditApplicationModal
+				isOpen={!!editingApp}
+				application={editingApp}
+				onClose={() => setEditingApp(null)}
+				onSave={handleSave}
 			/>
-			<input
-			className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2"
-			value={form.role}
-			onChange={(e) => setForm({ ...form, role: e.target.value })}
-			placeholder="Role"
-			/>
-			<select
-			className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2"
-			value={form.status}
-			onChange={(e) => setForm({ ...form, status: e.target.value })}
-			>
-			<option value="applied">Applied</option>
-			<option value="interviewing">Interviewing</option>
-			<option value="offer">Offer</option>
-			</select>
-			<input
-			className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2"
-			value={form.link}
-			onChange={(e) => setForm({ ...form, link: e.target.value })}
-			placeholder="Link"
-			/>
-			<textarea
-			className="md:col-span-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2"
-			value={form.notes}
-			onChange={(e) => setForm({ ...form, notes: e.target.value })}
-			placeholder="Notes"
-			/>
-		</div>
-		<div className="mt-3 flex gap-2">
-			<button
-			onClick={save}
-			disabled={saving}
-			className="rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2"
-			>
-			{saving ? "Saving..." : "Save"}
-			</button>
-			<button
-			onClick={() => setOpen(false)}
-			className="rounded-lg bg-gray-400 hover:bg-gray-500 text-white px-4 py-2"
-			>
-			Cancel
-			</button>
-		</div>
 		</div>
 	);
 };

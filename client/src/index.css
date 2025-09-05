@@ -3,3 +3,7 @@
 @tailwind utilities;
 
 html, body, #root { height: 100%; }
+
+body {
+    @apply transition-colors duration-500 ease-in-out;
+}

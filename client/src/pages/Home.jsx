@@ -10,7 +10,7 @@ const Home = () => {
                 Welcome to your Job Tracker
             </h1>
             <p className="mt-3 text-gray-600 dark:text-gray-300">
-                Track, filter, and analyze your job applications effortlessly.
+                Track, filter, and analyse your job applications effortlessly.
             </p>
             <div className="mt-6">
                 <Link

@@ -1,3 +1,4 @@
+// server/routes/applications.js
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 
@@ -6,7 +7,6 @@ const prisma = new PrismaClient();
 
 /**
  * GET /api/applications
- * Fetch all applications with optional filtering & sorting
  */
 router.get("/", async (req, res) => {
 	try {
@@ -28,13 +28,11 @@ router.get("/", async (req, res) => {
 
 /**
  * POST /api/applications
- * Create a new job application
  */
 router.post("/", async (req, res) => {
 	try {
 		const { company, role, status, link, notes } = req.body;
 
-		// ✅ Basic validation
 		if (!company?.trim() || !role?.trim()) {
 			return res.status(400).json({ error: "Company and role are required" });
 		}
@@ -43,7 +41,7 @@ router.post("/", async (req, res) => {
 			data: {
 				company,
 				role,
-				status: status || "applied", // default if not provided
+				status: status || "applied",
 				link: link?.trim() || null,
 				notes: notes?.trim() || null,
 			},
@@ -52,6 +50,42 @@ router.post("/", async (req, res) => {
 		res.status(201).json(newApplication);
 	} catch (error) {
 		console.error("Error creating application:", error);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+});
+
+/**
+ * PUT /api/applications/:id
+ */
+router.put("/:id", async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { company, role, status, link, notes } = req.body;
+
+		const updatedApp = await prisma.application.update({
+			where: { id: parseInt(id, 10) },
+			data: { company, role, status, link, notes },
+		});
+
+		res.json(updatedApp);
+	} catch (error) {
+		console.error("Error updating application:", error);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+});
+
+/**
+ * DELETE /api/applications/:id
+ */
+router.delete("/:id", async (req, res) => {
+	try {
+		const { id } = req.params;
+		await prisma.application.delete({
+			where: { id: parseInt(id, 10) },
+		});
+		res.json({ message: "Application deleted" });
+	} catch (error) {
+		console.error("Error deleting application:", error);
 		res.status(500).json({ error: "Internal Server Error" });
 	}
 });

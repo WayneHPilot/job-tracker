@@ -27,15 +27,17 @@ const EditApplicationModal = ({ isOpen, onClose, application, onSave }) => {
 	const handleSubmit = (e) => {
 		e.preventDefault();
 		onSave(formData); // Pass updated data back to parent
-		onClose(); // Close modal
 	};
 
 	if (!isOpen) return null; // Hide if modal is closed
 
 	return (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-			<div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-				<h2 className="text-xl font-bold mb-4">Edit Application</h2>
+		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+			<div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md 
+							border border-gray-200 dark:border-gray-700">
+				<h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+					Edit Application
+				</h2>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<input
@@ -44,7 +46,9 @@ const EditApplicationModal = ({ isOpen, onClose, application, onSave }) => {
 						placeholder="Company"
 						value={formData.company}
 						onChange={handleChange}
-						className="w-full border rounded px-3 py-2"
+						className="border rounded px-2 py-1 w-full 
+							bg-white dark:bg-gray-800 
+							text-gray-900 dark:text-gray-100"
 					/>
 					<input
 						type="text"
@@ -52,13 +56,17 @@ const EditApplicationModal = ({ isOpen, onClose, application, onSave }) => {
 						placeholder="Role"
 						value={formData.role}
 						onChange={handleChange}
-						className="w-full border rounded px-3 py-2"
+						className="border rounded px-2 py-1 w-full 
+							bg-white dark:bg-gray-800 
+							text-gray-900 dark:text-gray-100"
 					/>
 					<select
 						name="status"
 						value={formData.status}
 						onChange={handleChange}
-						className="w-full border rounded px-3 py-2"
+						className="border rounded px-2 py-1 w-full 
+							bg-white dark:bg-gray-800 
+							text-gray-900 dark:text-gray-100"
 					>
 						<option value="applied">Applied</option>
 						<option value="interviewing">Interviewing</option>
@@ -68,23 +76,29 @@ const EditApplicationModal = ({ isOpen, onClose, application, onSave }) => {
 						type="url"
 						name="link"
 						placeholder="Job Link"
-						value={formData.link}
+						value={formData.link || ""}
 						onChange={handleChange}
-						className="w-full border rounded px-3 py-2"
+						className="border rounded px-2 py-1 w-full 
+							bg-white dark:bg-gray-800 
+							text-gray-900 dark:text-gray-100"
 					/>
 					<textarea
 						name="notes"
 						placeholder="Notes"
-						value={formData.notes}
+						value={formData.notes || ""}
 						onChange={handleChange}
-						className="w-full border rounded px-3 py-2"
+						className="border rounded px-2 py-1 w-full 
+							bg-white dark:bg-gray-800 
+							text-gray-900 dark:text-gray-100"
 					/>
 
 					<div className="flex justify-end gap-2">
 						<button
 							type="button"
 							onClick={onClose}
-							className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+							className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 
+									text-gray-900 dark:text-gray-100 hover:bg-gray-400 
+									dark:hover:bg-gray-600"
 						>
 							Cancel
 						</button>
