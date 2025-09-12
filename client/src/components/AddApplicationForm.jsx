@@ -1,101 +1,109 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 const AddApplicationForm = ({ onAdded }) => {
-	const [formData, setFormData] = useState({
-		company: "",
-		role: "",
-		status: "applied",
-		link: "",
-		notes: "",
-	});
-	const [loading, setLoading] = useState(false);
+	const [company, setCompany] = useState("");
+	const [role, setRole] = useState("");
+	const [status, setStatus] = useState("applied");
+	const [link, setLink] = useState("");
+	const [notes, setNotes] = useState("");
 	const [error, setError] = useState(null);
+	const { token } = useAuth();
 
-	const handleChange = (e) => {
-		setFormData({ ...formData, [e.target.name]: e.target.value });
-	};
+const handleSubmit = async (e) => {
+	e.preventDefault();
+	const newApp = { company, role, status, link, notes };
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		setLoading(true);
+	try {
+		const res = await axios.post("http://localhost:3001/api/applications", newApp, {
+			headers: token ? { Authorization: `Bearer ${token}` } : {},
+		});
+
+		console.log("✅ Created app:", res.data);
+
+		// reset form
+		setCompany("");
+		setRole("");
+		setStatus("applied");
+		setLink("");
+		setNotes("");
 		setError(null);
 
-		try {
-			await axios.post("http://localhost:3001/api/applications", formData);
-			setFormData({ company: "", role: "", status: "applied", link: "", notes: "" });
-			onAdded();
-		} catch (err) {
-			setError("Failed to add application. Please try again.");
-		} finally {
-			setLoading(false);
-		}
-	};
+		// notify parent with the new app
+		if (onAdded) onAdded(res.data);
+	} catch (err) {
+		console.error("❌ Failed to add app:", err.response?.data || err.message);
+		setError("❌ Failed to save application. Are you logged in?");
+	}
+};
+
 
 	return (
-		<div className="border rounded p-4 shadow-sm">
-			<h2 className="text-xl font-semibold mb-3">Add New Application</h2>
-
+		<form onSubmit={handleSubmit} className="space-y-4">
 			{error && (
-				<div className="text-red-600 bg-red-100 border border-red-300 rounded p-2 mb-3">
+				<div className="text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200 border border-red-300 dark:border-red-700 rounded p-2">
 					{error}
 				</div>
 			)}
 
-			<form onSubmit={handleSubmit} className="space-y-3">
-				<input
-					type="text"
-					name="company"
-					placeholder="Company"
-					value={formData.company}
-					onChange={handleChange}
-					required
-					className="w-full border rounded px-3 py-2 dark:bg-gray-800 dark:text-gray-100"
-				/>
-				<input
-					type="text"
-					name="role"
-					placeholder="Role"
-					value={formData.role}
-					onChange={handleChange}
-					required
-					className="w-full border rounded px-3 py-2 dark:bg-gray-800 dark:text-gray-100"
-				/>
-				<select
-					name="status"
-					value={formData.status}
-					onChange={handleChange}
-					className="w-full border rounded px-3 py-2 dark:bg-gray-800 dark:text-gray-100"
-				>
-					<option value="applied">Applied</option>
-					<option value="interviewing">Interviewing</option>
-					<option value="offer">Offer</option>
-				</select>
-				<input
-					type="url"
-					name="link"
-					placeholder="Job link (optional)"
-					value={formData.link}
-					onChange={handleChange}
-					className="w-full border rounded px-3 py-2 dark:bg-gray-800 dark:text-gray-100"
-				/>
-				<textarea
-					name="notes"
-					placeholder="Notes (optional)"
-					value={formData.notes}
-					onChange={handleChange}
-					className="w-full border rounded px-3 py-2 dark:bg-gray-800 dark:text-gray-100"
-				/>
+			<input
+				type="text"
+				placeholder="Company"
+				value={company}
+				onChange={(e) => setCompany(e.target.value)}
+				className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 
+					text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+				required
+			/>
 
-				<button
-					type="submit"
-					disabled={loading}
-					className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
-				>
-					{loading ? "Adding..." : "Add Application"}
-				</button>
-			</form>
-		</div>
+			<input
+				type="text"
+				placeholder="Role"
+				value={role}
+				onChange={(e) => setRole(e.target.value)}
+				className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 
+					text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+				required
+			/>
+
+			<select
+				value={status}
+				onChange={(e) => setStatus(e.target.value)}
+				className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 
+					text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+			>
+				<option value="applied">Applied</option>
+				<option value="interviewing">Interviewing</option>
+				<option value="offer">Offer</option>
+			</select>
+
+			<input
+				type="url"
+				placeholder="Job Link (optional)"
+				value={link}
+				onChange={(e) => setLink(e.target.value)}
+				className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 
+					text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+			/>
+
+			<textarea
+				placeholder="Notes (optional)"
+				value={notes}
+				onChange={(e) => setNotes(e.target.value)}
+				className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 
+					text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+				rows="3"
+			/>
+
+			<button
+				type="submit"
+				className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 
+					dark:bg-blue-500 dark:hover:bg-blue-600"
+			>
+				Add Application
+			</button>
+		</form>
 	);
 };
 

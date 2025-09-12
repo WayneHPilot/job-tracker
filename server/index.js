@@ -1,27 +1,32 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import applicationsRouter from "./routes/applications.js";
+
 import authRoutes from "./routes/auth.js";
+import applicationRoutes from "./routes/applications.js";
 
 dotenv.config();
-
 const app = express();
 
-app.use("/api/auth", authRoutes);
-
-app.use(cors({ origin: "http://localhost:5173" }));
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-app.get("/health", (req, res) => res.json({ ok: true }));
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/applications", applicationRoutes);
 
-// Mount the applications router
-app.use("/api/applications", applicationsRouter);
-
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-	console.log(`API listening on http://localhost:${PORT}`);
+// Health check
+app.get("/", (req, res) => {
+	res.send("✅ Job Tracker API running");
 });
+
+// Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+	console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+
 
 
 // Update application

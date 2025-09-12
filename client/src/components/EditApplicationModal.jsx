@@ -1,72 +1,64 @@
-// client/src/components/EditApplicationModal.jsx
 import React, { useState, useEffect } from "react";
 
-const EditApplicationModal = ({ isOpen, onClose, application, onSave }) => {
-	const [formData, setFormData] = useState({
+const EditApplicationModal = ({ isOpen, application, onClose, onSave }) => {
+	const [form, setForm] = useState({
 		company: "",
 		role: "",
-		status: "",
+		status: "applied",
 		link: "",
 		notes: "",
 	});
 
-	// Pre-fill form when editing an application
 	useEffect(() => {
 		if (application) {
-			setFormData(application);
+			setForm({
+				company: application.company || "",
+				role: application.role || "",
+				status: application.status || "applied",
+				link: application.link || "",
+				notes: application.notes || "",
+			});
 		}
 	}, [application]);
 
+	if (!isOpen) return null;
+
 	const handleChange = (e) => {
-		setFormData({
-			...formData,
-			[e.target.name]: e.target.value,
-		});
+		setForm({ ...form, [e.target.name]: e.target.value });
 	};
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		onSave(formData); // Pass updated data back to parent
+		onSave(form);
 	};
 
-	if (!isOpen) return null; // Hide if modal is closed
-
 	return (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-			<div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md 
-							border border-gray-200 dark:border-gray-700">
-				<h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-					Edit Application
-				</h2>
+		<div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+			<div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg w-full max-w-md border border-gray-300 dark:border-gray-700">
+				<h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Edit Application</h2>
 
-				<form onSubmit={handleSubmit} className="space-y-4">
+				<form onSubmit={handleSubmit} className="space-y-3">
 					<input
 						type="text"
 						name="company"
 						placeholder="Company"
-						value={formData.company}
+						value={form.company}
 						onChange={handleChange}
-						className="border rounded px-2 py-1 w-full 
-							bg-white dark:bg-gray-800 
-							text-gray-900 dark:text-gray-100"
+						className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
 					/>
 					<input
 						type="text"
 						name="role"
 						placeholder="Role"
-						value={formData.role}
+						value={form.role}
 						onChange={handleChange}
-						className="border rounded px-2 py-1 w-full 
-							bg-white dark:bg-gray-800 
-							text-gray-900 dark:text-gray-100"
+						className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
 					/>
 					<select
 						name="status"
-						value={formData.status}
+						value={form.status}
 						onChange={handleChange}
-						className="border rounded px-2 py-1 w-full 
-							bg-white dark:bg-gray-800 
-							text-gray-900 dark:text-gray-100"
+						className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
 					>
 						<option value="applied">Applied</option>
 						<option value="interviewing">Interviewing</option>
@@ -76,35 +68,29 @@ const EditApplicationModal = ({ isOpen, onClose, application, onSave }) => {
 						type="url"
 						name="link"
 						placeholder="Job Link"
-						value={formData.link || ""}
+						value={form.link}
 						onChange={handleChange}
-						className="border rounded px-2 py-1 w-full 
-							bg-white dark:bg-gray-800 
-							text-gray-900 dark:text-gray-100"
+						className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
 					/>
 					<textarea
 						name="notes"
 						placeholder="Notes"
-						value={formData.notes || ""}
+						value={form.notes}
 						onChange={handleChange}
-						className="border rounded px-2 py-1 w-full 
-							bg-white dark:bg-gray-800 
-							text-gray-900 dark:text-gray-100"
-					/>
+						className="w-full border px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
+					></textarea>
 
 					<div className="flex justify-end gap-2">
 						<button
 							type="button"
 							onClick={onClose}
-							className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 
-									text-gray-900 dark:text-gray-100 hover:bg-gray-400 
-									dark:hover:bg-gray-600"
+							className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
 						>
 							Cancel
 						</button>
 						<button
 							type="submit"
-							className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+							className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
 						>
 							Save
 						</button>

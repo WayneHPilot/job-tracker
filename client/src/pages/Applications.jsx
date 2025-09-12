@@ -1,68 +1,155 @@
-// client/src/pages/Applications.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import AddApplicationForm from "../components/AddApplicationForm";
 import EditApplicationModal from "../components/EditApplicationModal";
+import { useAuth } from "../context/AuthContext";
+import { useApplications } from "../context/ApplicationsContext";
+
+const API_BASE = "http://localhost:3001/api";
 
 const Applications = () => {
-	const [applications, setApplications] = useState([]);
+	const { token } = useAuth();
+	const isLoggedIn = !!token;
+	const navigate = useNavigate();
+
+	const { applications, setApplications, loading, error } = useApplications();
+
 	const [statusFilter, setStatusFilter] = useState("");
 	const [sortOrder, setSortOrder] = useState("newest");
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState(null);
-
-	// Modal state
 	const [editingApp, setEditingApp] = useState(null);
 
-	// Fetch applications
-	const fetchApplications = useCallback(async () => {
-		setLoading(true);
-		setError(null);
-		try {
-			const params = {};
-			if (statusFilter) params.status = statusFilter;
-			if (sortOrder) params.sort = sortOrder;
-
-			const res = await axios.get("http://localhost:3001/api/applications", { params });
-			setApplications(res.data);
-		} catch (err) {
-			console.error(err);
-			setError("Failed to load applications. Please try again.");
-		} finally {
-			setLoading(false);
-		}
-	}, [statusFilter, sortOrder]);
-
+	// 🔹 Seed guest example applications
 	useEffect(() => {
-		fetchApplications();
-	}, [fetchApplications]);
+		if (!isLoggedIn && applications.length === 0) {
+			setApplications([
+				{
+					id: "guest-1",
+					company: "Acme Corp",
+					role: "Frontend Developer",
+					status: "applied",
+					link: "https://example.com",
+					notes: "Sent CV, waiting for response.",
+					createdAt: new Date().toISOString(),
+				},
+				{
+					id: "guest-2",
+					company: "Tech Solutions",
+					role: "Backend Engineer",
+					status: "interviewing",
+					link: "https://example.com",
+					notes: "First interview completed.",
+					createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+				},
+				{
+					id: "guest-3",
+					company: "Startup Inc.",
+					role: "Full-Stack Developer",
+					status: "offer",
+					link: "https://example.com",
+					notes: "Offer received!",
+					createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+				},
+			]);
+		}
+	}, [isLoggedIn, applications.length, setApplications]);
+
+	// Add handler
+	const handleAdd = async (maybeCreatedOrRaw) => {
+		if (maybeCreatedOrRaw && maybeCreatedOrRaw.id) {
+			setApplications((prev) => [maybeCreatedOrRaw, ...prev]);
+			return;
+		}
+
+		const newApp = maybeCreatedOrRaw;
+		if (!newApp) return;
+
+		if (!isLoggedIn) {
+			setApplications((prev) => [
+				{ ...newApp, id: `guest-${Date.now()}`, createdAt: new Date().toISOString() },
+				...prev,
+			]);
+			return;
+		}
+
+		try {
+			const res = await axios.post(`${API_BASE}/applications`, newApp, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			setApplications((prev) => [res.data, ...prev]);
+		} catch (err) {
+			console.error("Failed to add application:", err.response?.data || err.message);
+		}
+	};
 
 	// Save edited application
-	const handleSave = async (updatedApp) => {
-		try {
-			await axios.put(`http://localhost:3001/api/applications/${editingApp.id}`, updatedApp);
+	const handleSave = async (updatedData) => {
+		if (!editingApp) return;
+
+		if (String(editingApp.id).startsWith("guest-")) {
+			setApplications((prev) =>
+				prev.map((a) => (a.id === editingApp.id ? { ...a, ...updatedData } : a))
+			);
 			setEditingApp(null);
-			fetchApplications();
+			return;
+		}
+
+		try {
+			const res = await axios.put(
+				`${API_BASE}/applications/${editingApp.id}`,
+				updatedData,
+				{ headers: { Authorization: `Bearer ${token}` } }
+			);
+			setApplications((prev) =>
+				prev.map((a) => (a.id === res.data.id ? res.data : a))
+			);
+			setEditingApp(null);
 		} catch (err) {
-			console.error("Error saving changes:", err);
-			setError("Failed to save changes.");
+			console.error("Error saving changes:", err.response?.data || err.message);
 		}
 	};
 
 	// Delete application
 	const deleteApplication = async (id) => {
 		if (!window.confirm("Are you sure you want to delete this application?")) return;
+
+		if (String(id).startsWith("guest-")) {
+			setApplications((prev) => prev.filter((a) => a.id !== id));
+			return;
+		}
+
+		if (!isLoggedIn) {
+			alert("You must be logged in to delete saved applications.");
+			return;
+		}
+
 		try {
-			await axios.delete(`http://localhost:3001/api/applications/${id}`);
-			fetchApplications();
+			await axios.delete(`${API_BASE}/applications/${id}`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			setApplications((prev) => prev.filter((a) => a.id !== id));
 		} catch (err) {
-			setError("Failed to delete application.");
+			console.error("Failed to delete:", err.response?.data || err.message);
 		}
 	};
 
+	// Apply filters + sorting
+	const visibleApplications = applications
+		.filter((a) => (statusFilter ? a.status === statusFilter : true))
+		.sort((a, b) =>
+			sortOrder === "newest"
+				? new Date(b.createdAt) - new Date(a.createdAt)
+				: new Date(a.createdAt) - new Date(b.createdAt)
+		);
+
 	return (
 		<div className="max-w-4xl mx-auto p-4">
-			<h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Job Applications</h1>
+			{/* Header */}
+			<div className="flex items-center justify-between mb-4">
+				<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+					Job Applications
+				</h1>
+			</div>
 
 			{/* Filters */}
 			<div className="flex flex-wrap gap-4 mb-6">
@@ -87,38 +174,35 @@ const Applications = () => {
 				</select>
 			</div>
 
-			{/* Error message */}
+			{/* Guest banner */}
+			{!isLoggedIn && (
+				<div className="mb-4 p-3 rounded bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700">
+					⚠️ You are in Guest mode. Changes will be stored only locally unless you log in.
+				</div>
+			)}
+
+			{/* Error */}
 			{error && (
-				<div className="text-red-600 bg-red-100 border border-red-300 rounded p-3 mb-4">
+				<div className="text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200 border border-red-300 dark:border-red-700 rounded p-3 mb-4">
 					{error}
 				</div>
 			)}
 
-			{/* Loading state */}
+			{/* List / Empty / Loading */}
 			{loading ? (
-				<ul className="space-y-4">
-					{[1, 2, 3].map((i) => (
-						<li key={i} className="border rounded p-4 animate-pulse">
-							<div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
-							<div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
-						</li>
-					))}
-				</ul>
-			) : applications.length === 0 ? (
+				<p>Loading applications…</p>
+			) : visibleApplications.length === 0 ? (
 				<div className="text-center text-gray-500 mt-10">
 					<p>No applications found. Try adding one below 👇</p>
 				</div>
 			) : (
 				<ul className="space-y-4">
-					{applications.map((app) => (
+					{visibleApplications.map((app) => (
 						<li
 							key={app.id}
-							className="border rounded p-4 hover:shadow-md transition
-							        bg-white dark:bg-gray-900
-							        text-gray-900 dark:text-gray-100
-							        border-gray-300 dark:border-gray-700"
+							className="border rounded p-4 hover:shadow-md transition bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
 						>
-							<div className="flex justify-between items-center">
+							<div className="flex justify-between items-start">
 								<div>
 									<h2 className="font-semibold text-lg">{app.company}</h2>
 									<p className="text-gray-700 dark:text-gray-300">{app.role}</p>
@@ -144,10 +228,11 @@ const Applications = () => {
 										</a>
 									)}
 									{app.notes && (
-										<p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{app.notes}</p>
+										<p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+											{app.notes}
+										</p>
 									)}
 								</div>
-
 								<div className="flex gap-2">
 									<button
 										onClick={() => setEditingApp(app)}
@@ -169,8 +254,8 @@ const Applications = () => {
 			)}
 
 			{/* Add new application form */}
-			<div className="mt-8">
-				<AddApplicationForm onAdded={fetchApplications} />
+			<div className="mt-8 border rounded-lg p-4 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 shadow-sm">
+				<AddApplicationForm onAdded={handleAdd} />
 			</div>
 
 			{/* Edit Modal */}

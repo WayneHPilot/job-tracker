@@ -79,6 +79,7 @@ router.get("/", authMiddleware.optional, async (req, res) => {
  */
 router.post("/", authMiddleware.required, async (req, res) => {
 	try {
+		console.log("Incoming POST body:", req.body);
 		const { company, role, status, link, notes } = req.body;
 
 		if (!company?.trim() || !role?.trim()) {
@@ -88,7 +89,7 @@ router.post("/", authMiddleware.required, async (req, res) => {
 		const newApp = await prisma.application.create({
 			data: {
 				company,
-				role,
+				role: role || position,
 				status: status || "applied",
 				link: link?.trim() || null,
 				notes: notes?.trim() || null,
