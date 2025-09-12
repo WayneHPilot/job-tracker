@@ -1,4 +1,4 @@
-export const API_BASE = "http://localhost:3001";
+export const API_BASE = "https://job-tracker-fe4u.onrender.com";
 
 export async function getApplications(filters = {}) {
 	const params = new URLSearchParams(filters).toString();

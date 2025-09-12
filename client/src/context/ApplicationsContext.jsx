@@ -4,7 +4,7 @@ import { useAuth } from "./AuthContext";
 
 const ApplicationsContext = createContext();
 
-const API_BASE = "http://localhost:3001/api";
+const API_BASE = "https://job-tracker-fe4u.onrender.com/api";
 
 export const ApplicationsProvider = ({ children }) => {
 	const { token } = useAuth();

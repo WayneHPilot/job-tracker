@@ -6,7 +6,7 @@ import EditApplicationModal from "../components/EditApplicationModal";
 import { useAuth } from "../context/AuthContext";
 import { useApplications } from "../context/ApplicationsContext";
 
-const API_BASE = "http://localhost:3001/api";
+const API_BASE = "https://job-tracker-fe4u.onrender.com/api";
 
 const Applications = () => {
 	const { token } = useAuth();
