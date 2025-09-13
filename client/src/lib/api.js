@@ -1,4 +1,4 @@
-export const API_BASE = "https://job-tracker-fe4u.onrender.com";
+export const API_BASE = process.env.REACT_APP_API_BASE;
 
 export async function getApplications(filters = {}) {
 	const params = new URLSearchParams(filters).toString();

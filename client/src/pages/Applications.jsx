@@ -6,7 +6,7 @@ import EditApplicationModal from "../components/EditApplicationModal";
 import { useAuth } from "../context/AuthContext";
 import { useApplications } from "../context/ApplicationsContext";
 
-const API_BASE = "https://job-tracker-fe4u.onrender.com/api";
+const API_BASE = process.env.REACT_APP_API_BASE;
 
 const Applications = () => {
 	const { token } = useAuth();

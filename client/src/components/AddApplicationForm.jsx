@@ -16,7 +16,7 @@ const handleSubmit = async (e) => {
 	const newApp = { company, role, status, link, notes };
 
 	try {
-		const res = await axios.post("https://job-tracker-fe4u.onrender.com/api/applications", newApp, {
+		const res = await axios.post("process.env.REACT_APP_API_BASE", newApp, {
 			headers: token ? { Authorization: `Bearer ${token}` } : {},
 		});
 

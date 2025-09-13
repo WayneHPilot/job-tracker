@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
 		let mounted = true;
 		(async () => {
 			try {
-				const res = await fetch("https://job-tracker-fe4u.onrender.com/api/auth/me", {
+				const res = await fetch(process.env.REACT_APP_API_BASE, {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				if (!res.ok) throw new Error("Invalid token");
