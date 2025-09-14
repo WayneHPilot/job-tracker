@@ -1,3 +1,4 @@
+// client/src/pages/Home.jsx
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
@@ -16,15 +17,35 @@ const Home = () => {
 	const [message, setMessage] = useState("");
 	const navigate = useNavigate();
 
+	// Register form state
+	const [registerEmail, setRegisterEmail] = useState("");
+	const [registerPassword, setRegisterPassword] = useState("");
+
 	// Login handler
 	const handleLogin = async () => {
 		try {
 			const res = await axios.post(`${API_BASE}/auth/login`, { email, password });
 			login(res.data.token);
 			setMessage("✅ Logged in successfully!");
-			navigate("/"); // stay on dashboard after login
+			navigate("/");
 		} catch (err) {
 			setMessage("❌ Login failed");
+		}
+	};
+
+	// Register handler
+	const handleRegister = async () => {
+		try {
+			const res = await axios.post(`${API_BASE}/auth/register`, {
+				email: registerEmail,
+				password: registerPassword,
+			});
+			login(res.data.token); // auto-login after register
+			setMessage("✅ Registered and logged in!");
+			setShowRegister(false);
+			navigate("/");
+		} catch (err) {
+			setMessage("❌ Registration failed");
 		}
 	};
 
@@ -165,14 +186,21 @@ const Home = () => {
 							type="email"
 							placeholder="Email"
 							className="border rounded w-full px-3 py-2 mb-2 dark:bg-gray-700"
+							value={registerEmail}
+							onChange={(e) => setRegisterEmail(e.target.value)}
 						/>
 						<input
 							type="password"
 							placeholder="Password"
 							className="border rounded w-full px-3 py-2 mb-2 dark:bg-gray-700"
+							value={registerPassword}
+							onChange={(e) => setRegisterPassword(e.target.value)}
 						/>
 						<div className="flex gap-2">
-							<button className="bg-green-500 text-white px-4 py-2 rounded">
+							<button
+								onClick={handleRegister}
+								className="bg-green-500 text-white px-4 py-2 rounded"
+							>
 								Submit
 							</button>
 							<button

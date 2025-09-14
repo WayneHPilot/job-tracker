@@ -1,6 +1,8 @@
 // client/src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 
+const API_BASE = import.meta.env.VITE_API_BASE;
+
 export const AuthContext = createContext({
 	user: null,
 	token: null,
@@ -25,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 				const res = await fetch(`${API_BASE}/auth/me`, {
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				
+
 				if (!res.ok) throw new Error("Invalid token");
 				const data = await res.json();
 				if (mounted) setUser(data);

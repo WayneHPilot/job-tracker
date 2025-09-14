@@ -1,3 +1,4 @@
+// client/src/context/ApplicationsContext.jsx
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
@@ -15,7 +16,7 @@ export const ApplicationsProvider = ({ children }) => {
 	// Fetch applications
 	const fetchApplications = useCallback(async () => {
 		if (!token) {
-			setApplications([]); // guests can still add locally, but nothing from API
+			setApplications([]); // guests see nothing from API
 			return;
 		}
 		setLoading(true);
@@ -37,9 +38,73 @@ export const ApplicationsProvider = ({ children }) => {
 		fetchApplications();
 	}, [fetchApplications]);
 
+	// Add application
+	const addApplication = async (newApp) => {
+		if (!token) {
+			// guest mode → add locally only
+			setApplications((prev) => [...prev, { ...newApp, id: Date.now() }]);
+			return;
+		}
+		try {
+			const res = await axios.post(`${API_BASE}/applications`, newApp, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			setApplications((prev) => [...prev, res.data]);
+		} catch (err) {
+			console.error("Error adding application:", err);
+		}
+	};
+
+	// Update application
+	const updateApplication = async (id, updates) => {
+		if (!token) {
+			// guest mode → update locally
+			setApplications((prev) =>
+				prev.map((app) => (app.id === id ? { ...app, ...updates } : app))
+			);
+			return;
+		}
+		try {
+			const res = await axios.put(`${API_BASE}/applications/${id}`, updates, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			setApplications((prev) =>
+				prev.map((app) => (app.id === id ? res.data : app))
+			);
+		} catch (err) {
+			console.error("Error updating application:", err);
+		}
+	};
+
+	// Delete application
+	const deleteApplication = async (id) => {
+		if (!token) {
+			// guest mode → remove locally
+			setApplications((prev) => prev.filter((app) => app.id !== id));
+			return;
+		}
+		try {
+			await axios.delete(`${API_BASE}/applications/${id}`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			setApplications((prev) => prev.filter((app) => app.id !== id));
+		} catch (err) {
+			console.error("Error deleting application:", err);
+		}
+	};
+
 	return (
 		<ApplicationsContext.Provider
-			value={{ applications, setApplications, fetchApplications, loading, error }}
+			value={{
+				applications,
+				setApplications,
+				fetchApplications,
+				addApplication,
+				updateApplication,
+				deleteApplication,
+				loading,
+				error,
+			}}
 		>
 			{children}
 		</ApplicationsContext.Provider>
