@@ -15,10 +15,10 @@ const handleSubmit = async (e) => {
 	e.preventDefault();
 	const newApp = { company, role, status, link, notes };
 
-	try {
-		const res = await axios.post("process.env.REACT_APP_API_BASE", newApp, {
-			headers: token ? { Authorization: `Bearer ${token}` } : {},
-		});
+try {
+	const res = await axios.post(`${API_BASE}/applications`, newApp, {
+		headers: token ? { Authorization: `Bearer ${token}` } : {},
+	});
 
 		console.log("✅ Created app:", res.data);
 

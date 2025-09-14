@@ -22,9 +22,10 @@ export const AuthProvider = ({ children }) => {
 		let mounted = true;
 		(async () => {
 			try {
-				const res = await fetch(process.env.REACT_APP_API_BASE, {
+				const res = await fetch(`${API_BASE}/auth/me`, {
 					headers: { Authorization: `Bearer ${token}` },
 				});
+				
 				if (!res.ok) throw new Error("Invalid token");
 				const data = await res.json();
 				if (mounted) setUser(data);

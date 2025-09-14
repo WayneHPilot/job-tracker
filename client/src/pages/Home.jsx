@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useApplications } from "../context/ApplicationsContext";
 
-const API_BASE = process.env.REACT_APP_API_BASE;
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const Home = () => {
 	const { token, login } = useAuth();
