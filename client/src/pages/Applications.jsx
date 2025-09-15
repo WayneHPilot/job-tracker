@@ -6,6 +6,8 @@ import EditApplicationModal from "../components/EditApplicationModal";
 import { useAuth } from "../context/AuthContext";
 import { useApplications } from "../context/ApplicationsContext";
 
+console.log("🚀 API_BASE =", API_BASE);
+
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 const Applications = () => {
