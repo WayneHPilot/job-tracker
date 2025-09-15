@@ -5,6 +5,7 @@ import AddApplicationForm from "../components/AddApplicationForm";
 import EditApplicationModal from "../components/EditApplicationModal";
 import { useAuth } from "../context/AuthContext";
 import { useApplications } from "../context/ApplicationsContext";
+import { API_BASE } from "../config";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 

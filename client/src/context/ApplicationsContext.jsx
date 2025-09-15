@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
+import { API_BASE } from "../config";
+
 
 const ApplicationsContext = createContext();
 
