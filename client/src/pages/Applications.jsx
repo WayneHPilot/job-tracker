@@ -8,7 +8,7 @@ import { useApplications } from "../context/ApplicationsContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
-console.log("🚀 API_BASE =", API_BASE);a
+console.log("🚀 API_BASE =", API_BASE);
 
 const Applications = () => {
 	const { token } = useAuth();
