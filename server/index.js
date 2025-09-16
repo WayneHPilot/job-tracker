@@ -24,9 +24,6 @@ app.use(
 );
 app.use(express.json());
 
-import authRoutes from "./routes/auth.js";
-import applicationRoutes from "./routes/applications.js";
-
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/applications", applicationRoutes);
