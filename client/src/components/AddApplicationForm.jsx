@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE } from "../config";
 
 const AddApplicationForm = ({ onAdded }) => {
 	const [company, setCompany] = useState("");
