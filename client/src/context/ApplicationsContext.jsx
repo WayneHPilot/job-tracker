@@ -2,12 +2,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
-import { API_BASE } from "../config";
-
+import { API_BASE } from "../config"; // single source of truth
 
 const ApplicationsContext = createContext();
-
-const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const ApplicationsProvider = ({ children }) => {
 	const { token } = useAuth();

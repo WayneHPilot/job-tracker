@@ -1,7 +1,6 @@
 // client/src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-
-const API_BASE = import.meta.env.VITE_API_BASE;
+import { API_BASE } from "../config"; // single source of truth
 
 export const AuthContext = createContext({
 	user: null,

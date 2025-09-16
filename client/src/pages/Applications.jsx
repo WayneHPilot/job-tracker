@@ -7,8 +7,6 @@ import { useAuth } from "../context/AuthContext";
 import { useApplications } from "../context/ApplicationsContext";
 import { API_BASE } from "../config";
 
-const API_BASE = import.meta.env.VITE_API_BASE;
-
 console.log("🚀 API_BASE =", API_BASE);
 
 const Applications = () => {
