@@ -85,17 +85,16 @@ router.post("/", authMiddleware.required, async (req, res) => {
 		if (!company?.trim() || !role?.trim()) {
 			return res.status(400).json({ error: "Company and role are required" });
 		}
-
-		const newApp = await prisma.application.create({
-			data: {
-				company,
-				role: role || position,
-				status: status || "applied",
-				link: link?.trim() || null,
-				notes: notes?.trim() || null,
-				userId: req.user.id, // ✅ link to logged-in user
-			},
-		});
+const newApp = await prisma.application.create({
+	data: {
+		company,
+		role, // ✅ no "position"
+		status: status || "applied",
+		link: link?.trim() || null,
+		notes: notes?.trim() || null,
+		userId: req.user.id,
+	},
+});
 
 		res.status(201).json(newApp);
 	} catch (error) {
@@ -104,22 +103,19 @@ router.post("/", authMiddleware.required, async (req, res) => {
 	}
 });
 
-/**
- * PUT /api/applications/:id
- * - Only owner can edit
- */
+// PUT /api/applications/:id
 router.put("/:id", authMiddleware.required, async (req, res) => {
 	try {
 		const { id } = req.params;
 		const { company, role, status, link, notes } = req.body;
 
-		const app = await prisma.application.findUnique({ where: { id } });
+		const app = await prisma.application.findUnique({ where: { id: parseInt(id, 10) } });
 		if (!app || app.userId !== req.user.id) {
 			return res.status(403).json({ error: "Not authorised" });
 		}
 
 		const updated = await prisma.application.update({
-			where: { id },
+			where: { id: parseInt(id, 10) },
 			data: { company, role, status, link, notes },
 		});
 
@@ -130,20 +126,18 @@ router.put("/:id", authMiddleware.required, async (req, res) => {
 	}
 });
 
-/**
- * DELETE /api/applications/:id
- * - Only owner can delete
- */
+
+// DELETE /api/applications/:id
 router.delete("/:id", authMiddleware.required, async (req, res) => {
 	try {
 		const { id } = req.params;
 
-		const app = await prisma.application.findUnique({ where: { id } });
+		const app = await prisma.application.findUnique({ where: { id: parseInt(id, 10) } });
 		if (!app || app.userId !== req.user.id) {
 			return res.status(403).json({ error: "Not authorised" });
 		}
 
-		await prisma.application.delete({ where: { id } });
+		await prisma.application.delete({ where: { id: parseInt(id, 10) } });
 		res.json({ message: "Application deleted" });
 	} catch (error) {
 		console.error("Error deleting application:", error);
