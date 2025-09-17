@@ -7,10 +7,8 @@ import authRoutes from "./routes/auth.js";
 import applicationRoutes from "./routes/applications.js";
 import healthRoutes from "./routes/health.js";
 
-app.use("/api/health", healthRoutes);
-
 dotenv.config();
-const app = express();
+const app = express(); // ✅ define app before using it
 const prisma = new PrismaClient();
 
 // Prisma connection test on startup
@@ -20,7 +18,7 @@ async function initPrisma() {
 		console.log("✅ Prisma successfully connected to Postgres");
 	} catch (err) {
 		console.error("❌ Prisma failed to connect:", err);
-		process.exit(1); // crash early if DB is unreachable
+		process.exit(1);
 	}
 }
 
@@ -28,8 +26,8 @@ async function initPrisma() {
 app.use(
 	cors({
 		origin: [
-			"http://localhost:3000", // local frontend
-			"https://job-tracker-six-sand.vercel.app", // vercel frontend
+			"http://localhost:3000",
+			"https://job-tracker-six-sand.vercel.app",
 		],
 		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
@@ -41,8 +39,9 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/health", healthRoutes); // ✅ now safe
 
-// Health check
+// Root check
 app.get("/", (req, res) => {
 	res.send("✅ Job Tracker API running");
 });
