@@ -5,10 +5,24 @@ import { PrismaClient } from "@prisma/client";
 
 import authRoutes from "./routes/auth.js";
 import applicationRoutes from "./routes/applications.js";
+import healthRoutes from "./routes/health.js";
+
+app.use("/api/health", healthRoutes);
 
 dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
+
+// Prisma connection test on startup
+async function initPrisma() {
+	try {
+		await prisma.$connect();
+		console.log("✅ Prisma successfully connected to Postgres");
+	} catch (err) {
+		console.error("❌ Prisma failed to connect:", err);
+		process.exit(1); // crash early if DB is unreachable
+	}
+}
 
 // Middleware
 app.use(
@@ -46,7 +60,8 @@ app.get("/api/db-status", async (req, res) => {
 
 // Server
 const PORT = process.env.PORT || 3001;
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
+	await initPrisma(); // connect Prisma on startup
 	console.log(`🚀 Server running on port ${PORT}`);
 });
 

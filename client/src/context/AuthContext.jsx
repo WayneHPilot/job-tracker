@@ -1,6 +1,5 @@
-// client/src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { API_BASE } from "../config"; // single source of truth
+import { API_BASE } from "../config"; 
 
 export const AuthContext = createContext({
 	user: null,

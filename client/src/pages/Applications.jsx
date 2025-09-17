@@ -20,40 +20,20 @@ const Applications = () => {
 	const [sortOrder, setSortOrder] = useState("newest");
 	const [editingApp, setEditingApp] = useState(null);
 
-	// 🔹 Seed guest example applications
+	// 🔹 Fetch applications from backend
 	useEffect(() => {
-		if (!isLoggedIn && applications.length === 0) {
-			setApplications([
-				{
-					id: "guest-1",
-					company: "Acme Corp",
-					role: "Frontend Developer",
-					status: "applied",
-					link: "https://example.com",
-					notes: "Sent CV, waiting for response.",
-					createdAt: new Date().toISOString(),
-				},
-				{
-					id: "guest-2",
-					company: "Tech Solutions",
-					role: "Backend Engineer",
-					status: "interviewing",
-					link: "https://example.com",
-					notes: "First interview completed.",
-					createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-				},
-				{
-					id: "guest-3",
-					company: "Startup Inc.",
-					role: "Full-Stack Developer",
-					status: "offer",
-					link: "https://example.com",
-					notes: "Offer received!",
-					createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-				},
-			]);
-		}
-	}, [isLoggedIn, applications.length, setApplications]);
+		const fetchApps = async () => {
+			try {
+				const res = await axios.get(`${API_BASE}/applications`, {
+					headers: token ? { Authorization: `Bearer ${token}` } : {},
+				});
+				setApplications(res.data);
+			} catch (err) {
+				console.error("Error fetching applications:", err.response?.data || err.message);
+			}
+		};
+		fetchApps();
+	}, [token, setApplications]);
 
 	// Add handler
 	const handleAdd = async (maybeCreatedOrRaw) => {
@@ -64,14 +44,6 @@ const Applications = () => {
 
 		const newApp = maybeCreatedOrRaw;
 		if (!newApp) return;
-
-		if (!isLoggedIn) {
-			setApplications((prev) => [
-				{ ...newApp, id: `guest-${Date.now()}`, createdAt: new Date().toISOString() },
-				...prev,
-			]);
-			return;
-		}
 
 		try {
 			const res = await axios.post(`${API_BASE}/applications`, newApp, {
@@ -86,14 +58,6 @@ const Applications = () => {
 	// Save edited application
 	const handleSave = async (updatedData) => {
 		if (!editingApp) return;
-
-		if (String(editingApp.id).startsWith("guest-")) {
-			setApplications((prev) =>
-				prev.map((a) => (a.id === editingApp.id ? { ...a, ...updatedData } : a))
-			);
-			setEditingApp(null);
-			return;
-		}
 
 		try {
 			const res = await axios.put(
@@ -113,16 +77,6 @@ const Applications = () => {
 	// Delete application
 	const deleteApplication = async (id) => {
 		if (!window.confirm("Are you sure you want to delete this application?")) return;
-
-		if (String(id).startsWith("guest-")) {
-			setApplications((prev) => prev.filter((a) => a.id !== id));
-			return;
-		}
-
-		if (!isLoggedIn) {
-			alert("You must be logged in to delete saved applications.");
-			return;
-		}
 
 		try {
 			await axios.delete(`${API_BASE}/applications/${id}`, {
@@ -178,7 +132,7 @@ const Applications = () => {
 			{/* Guest banner */}
 			{!isLoggedIn && (
 				<div className="mb-4 p-3 rounded bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700">
-					⚠️ You are in Guest mode. Changes will be stored only locally unless you log in.
+					⚠️ You are in Guest mode. Changes will not be saved to an account.
 				</div>
 			)}
 
